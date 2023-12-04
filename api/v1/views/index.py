@@ -1,7 +1,4 @@
-#!/usr/bin/python3
-'''Contains the index view for the API.'''
 from flask import jsonify
-
 from api.v1.views import app_views
 from models import storage
 from models.amenity import Amenity
@@ -11,9 +8,17 @@ from models.review import Review
 from models.state import State
 from models.user import User
 
-
-@app_views.route('/status')
-def get_status():
-    '''Gets the status of the API.
+@app_views.route('/api/v1/stats', methods=['GET'])
+def get_stats():
+    '''Gets the count of each object by type.
     '''
-    return jsonify(status='OK')
+    stats = {
+        "amenities": storage.count(Amenity),
+        "cities": storage.count(City),
+        "places": storage.count(Place),
+        "reviews": storage.count(Review),
+        "states": storage.count(State),
+        "users": storage.count(User)
+    }
+
+    return jsonify(stats)
