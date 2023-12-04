@@ -2,7 +2,7 @@
 '''Contains a Flask web application API.
 '''
 import os
-from flask import Flask, jsonify
+from flask import Flask, make_response, jsonify
 from flask_cors import CORS
 
 from models import storage
@@ -22,6 +22,12 @@ CORS(app, resources={'/*': {'origins': app_host}})
 def teardown_flask(exception):
     '''The Flask app/request context end event listener.'''
     # print(exception)
+    storage.close()
+
+
+@app.teardown_appcontext
+def close_db(obj):
+    """ calls methods close() """
     storage.close()
 
 
