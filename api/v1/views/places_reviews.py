@@ -1,14 +1,12 @@
 #!/usr/bin/python3
 '''Contains the places_reviews view for the API.'''
 from flask import jsonify, request
-from werkzeug.exceptions import NotFound, MethodNotAllowed, BadRequest
-
+from werkzeug.exceptions import NotFound, BadRequest
 from api.v1.views import app_views
 from models import storage
 from models.place import Place
 from models.review import Review
 from models.user import User
-
 
 @app_views.route('/places/<place_id>/reviews', methods=['GET', 'POST'])
 @app_views.route('/reviews/<review_id>', methods=['GET', 'DELETE', 'PUT'])
@@ -26,7 +24,6 @@ def handle_reviews(place_id=None, review_id=None):
     else:
         raise MethodNotAllowed(list(handlers.keys()))
 
-
 def get_reviews(place_id=None, review_id=None):
     '''Gets the review with the given id or all reviews in
     the place with the given id.
@@ -34,16 +31,13 @@ def get_reviews(place_id=None, review_id=None):
     if place_id:
         place = storage.get(Place, place_id)
         if place:
-            reviews = []
-            for review in place.reviews:
-                reviews.append(review.to_dict())
+            reviews = [review.to_dict() for review in place.reviews]
             return jsonify(reviews)
     elif review_id:
         review = storage.get(Review, review_id)
         if review:
             return jsonify(review.to_dict())
     raise NotFound()
-
 
 def remove_review(place_id=None, review_id=None):
     '''Removes a review with the given id.
@@ -55,7 +49,6 @@ def remove_review(place_id=None, review_id=None):
         return jsonify({}), 200
     raise NotFound()
 
-
 def add_review(place_id=None, review_id=None):
     '''Adds a new review.
     '''
@@ -63,7 +56,7 @@ def add_review(place_id=None, review_id=None):
     if not place:
         raise NotFound()
     data = request.get_json()
-    if type(data) is not dict:
+    if not isinstance(data, dict):
         raise BadRequest(description='Not a JSON')
     if 'user_id' not in data:
         raise BadRequest(description='Missing user_id')
@@ -77,20 +70,18 @@ def add_review(place_id=None, review_id=None):
     new_review.save()
     return jsonify(new_review.to_dict()), 201
 
-
 def update_review(place_id=None, review_id=None):
     '''Updates the review with the given id.
     '''
     xkeys = ('id', 'user_id', 'place_id', 'created_at', 'updated_at')
-    if review_id:
-        review = storage.get(Review, review_id)
-        if review:
-            data = request.get_json()
-            if type(data) is not dict:
-                raise BadRequest(description='Not a JSON')
-            for key, value in data.items():
-                if key not in xkeys:
-                    setattr(review, key, value)
-            review.save()
-            return jsonify(review.to_dict()), 200
+    review = storage.get(Review, review_id)
+    if review:
+        data = request.get_json()
+        if not isinstance(data, dict):
+            raise BadRequest(description='Not a JSON')
+        for key, value in data.items():
+            if key not in xkeys:
+                setattr(review, key, value)
+        review.save()
+        return jsonify(review.to_dict()), 200
     raise NotFound()
