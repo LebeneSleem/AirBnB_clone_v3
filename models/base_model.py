@@ -1,8 +1,4 @@
 #!/usr/bin/python3
-"""
-Contains class BaseModel
-"""
-
 from datetime import datetime
 import models
 from os import getenv
@@ -10,6 +6,7 @@ import sqlalchemy
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 import uuid
+import hashlib
 
 time = "%Y-%m-%dT%H:%M:%S.%f"
 
@@ -18,13 +15,16 @@ if models.storage_t == "db":
 else:
     Base = object
 
-
 class BaseModel:
     """The BaseModel class from which future classes will be derived"""
     if models.storage_t == "db":
         id = Column(String(60), primary_key=True)
         created_at = Column(DateTime, default=datetime.utcnow)
         updated_at = Column(DateTime, default=datetime.utcnow)
+    else:
+        id = ""
+        created_at = datetime.utcnow()
+        updated_at = datetime.utcnow()
 
     def __init__(self, *args, **kwargs):
         """Initialization of the base model"""
@@ -58,9 +58,11 @@ class BaseModel:
         models.storage.new(self)
         models.storage.save()
 
-    def to_dict(self):
+    def to_dict(self, exclude_password=True):
         """returns a dictionary containing all keys/values of the instance"""
         new_dict = self.__dict__.copy()
+        if exclude_password and "password" in new_dict:
+            del new_dict["password"]
         if "created_at" in new_dict:
             new_dict["created_at"] = new_dict["created_at"].strftime(time)
         if "updated_at" in new_dict:

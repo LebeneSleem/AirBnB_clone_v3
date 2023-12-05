@@ -1,12 +1,11 @@
 #!/usr/bin/python3
-""" holds class User"""
 import models
 from models.base_model import BaseModel, Base
 from os import getenv
 import sqlalchemy
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
-
+import hashlib
 
 class User(BaseModel, Base):
     """Representation of a user """
@@ -27,3 +26,8 @@ class User(BaseModel, Base):
     def __init__(self, *args, **kwargs):
         """initializes user"""
         super().__init__(*args, **kwargs)
+        # Hash the password when a new User object is created or password is updated
+        if models.storage_t == 'db' and 'password' in kwargs:
+            self.password = hashlib.md5(kwargs['password'].encode()).hexdigest()
+        elif 'password' in kwargs:
+            self.password = hashlib.md5(kwargs['password'].encode()).hexdigest()
